@@ -12,7 +12,7 @@ final class Nil<T> implements Lista<T> {
         return null;
     }
     public boolean isEmpty(){
-            return false;
+            return true;
     }
 
     @Override

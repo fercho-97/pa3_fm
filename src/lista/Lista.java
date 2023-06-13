@@ -1,6 +1,8 @@
 package lista;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public sealed interface Lista<T> permits Cons, Nil {
     Lista NIL = new Nil();
@@ -65,7 +67,7 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     }
 
-    default Lista<T> remove(T val) {
+    default Lista<T> removeAll(T val) {
         var tmp = this;
         var ret = NIL;
         while (tmp != NIL) {
@@ -75,11 +77,146 @@ public sealed interface Lista<T> permits Cons, Nil {
 
             }
             tmp = tmp.tail();
-          
+
         }
 
         return ret;
 
     }
+
+    default Lista<T> remove(T elem) {
+
+        if (this.isEmpty()) {
+
+            return NIL;
+        } else {
+            if (head().equals(elem)) {
+
+                return tail();
+            } else {
+                return Lista.of(head(), tail().remove(elem));
+            }
+        }
+
+    }
+
+    default Lista<T> drop(Integer elem) {
+        if (this.isEmpty()) {
+            return NIL;
+        } else {
+            if (!(elem == 1)) {
+                return tail().drop(elem - 1);
+            } else {
+                return tail();
+            }
+
+        }
+    }
+
+
+
+
+    default Lista<T> dropWhile(Predicate<T> p) {
+
+           /* if (isEmpty()) {
+                return NIL;
+            } else {
+
+                if (p.test(head())){
+                    return tail().dropWhile(p);
+                }else{
+                    return Lista.of(head(), tail().dropWhile(p));
+                }
+            }
+*/
+
+        return isEmpty() ? NIL
+                : p.test(head()) ? tail().dropWhile(p)
+                : Lista.of(head(), tail().dropWhile(p));
+
+
+    }
+
+    default Lista<T> take(Integer elem) {
+        if (this.isEmpty()) {
+
+            return NIL;
+        } else {
+            if (elem == 0) {
+                return Lista.of();
+            } else {
+                return tail().take(elem - 1).preppend(head());
+            }
+        }
+    }
+
+    default Lista<T> takeWhile(Predicate<T> p) {
+
+        if (isEmpty()){
+
+            return  NIL;
+        }else {
+
+            if (p.test(head())){
+
+                return Lista.of(head(), tail().takeWhile(p));
+            }else {
+
+                return tail().takeWhile(p);
+            }
+        }
+
+
+    }
+
+    static int suma(Lista<Integer> lista) {
+
+        if (lista.isEmpty()) {
+
+            return 0;
+        } else {
+            return lista.head() + suma(lista.tail());
+
+        }
+
+
+    }
+    static int max(Lista<Integer> lista) {
+
+        return maxAux(lista, lista.head());
+    }
+    static int maxAux(Lista<Integer> lista, Integer m) {
+
+        if (lista.isEmpty()) {
+            return m;
+        } else {
+
+            if (m <= lista.head()) {
+
+                m = lista.head();
+
+                return maxAux(lista.tail(), m);
+            } else {
+
+                return maxAux(lista.tail(), m);
+
+            }
+        }
+
+    }
+
+
+    static Function<Integer, Integer> comp(Function<Integer, Integer> f, Function<Integer, Integer> g) {
+
+
+        return new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer x) {
+
+                return g.apply(f.apply(x));
+            }
+        };
+    }
+
 }
 
