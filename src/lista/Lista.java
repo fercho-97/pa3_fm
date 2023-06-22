@@ -100,17 +100,27 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     }
 
-    default Lista<T> drop(Integer elem) {
+    default Lista<T> invertir(){
+
         if (this.isEmpty()) {
+
             return NIL;
         } else {
+
+            return tail().invertir().append(head());
+        }
+
+    }
+
+    default Lista<T> drop(Integer elem) {
+
             if (!(elem == 1)) {
                 return tail().drop(elem - 1);
             } else {
                 return tail();
             }
 
-        }
+
     }
 
 
@@ -206,17 +216,49 @@ public sealed interface Lista<T> permits Cons, Nil {
     }
 
 
-    static Function<Integer, Integer> comp(Function<Integer, Integer> f, Function<Integer, Integer> g) {
+    static<T> Function<Function<T, T>, Function<Function<T, T>,Function<T, T>>> compPoli (){
+
+        return f->g->x-> g.apply(f.apply(x));
+
+    }
 
 
-        return new Function<Integer, Integer>() {
+
+    static<T,U,V> Function<Function<T, U>, Function<Function<U, V>,Function<T, V>>> compPoli2 (){
+
+        return f->g->x-> g.apply(f.apply(x));
+
+
+    }
+
+
+
+    static<T> Function<T, T> comp(Function<T, T> f, Function<T, T> g) {
+
+        return new Function<T, T>() {
             @Override
-            public Integer apply(Integer x) {
+            public T apply(T x) {
 
                 return g.apply(f.apply(x));
             }
         };
     }
+
+
+
+    static<T,U,V> Function<T, V> compPolFun(Function<T, U> f, Function<U, V> g) {
+
+        return new Function<T, V>() {
+            @Override
+            public V apply(T x) {
+
+                return g.apply(f.apply(x));
+            }
+        };
+    }
+
+
+
 
 }
 
