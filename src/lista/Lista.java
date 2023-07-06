@@ -19,6 +19,19 @@ public sealed interface Lista<T> permits Cons, Nil {
         return new Cons<>(h, t);
     }
 
+    static <T> Lista<T> of(Lista<T> t, Lista<T> t2, T h) {
+        return concatenar(t, t2).append(h);
+    }
+
+    static <T> Lista<T> of(Lista<T> t, T h, Lista<T> t2) {
+
+        return concatenar(t.append(h), t2);
+    }
+
+    static <T> Lista<T> of(T h, Lista<T> t, Lista<T> t2) {
+        return concatenar(new Cons<>(h, t), t2);
+    }
+
     static <T> Lista<T> of(T... elems) {
 
         Lista<T> ret = Lista.NIL;
@@ -67,6 +80,11 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     }
 
+    public static <U> Lista<U> concatenar2(Lista<U> lista1, Lista<U> lista2) {
+        return lista1.isEmpty() ? lista2 : Lista.of(lista1.head(), concatenar2(lista1.tail(), lista2));
+    }
+
+
     default Lista<T> removeAll(T val) {
         var tmp = this;
         var ret = NIL;
@@ -114,9 +132,13 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     default Lista<T> drop(Integer elem) {
 
-            if (!(elem == 1)) {
+            if (!(elem == 0)) {
                 return tail().drop(elem - 1);
-            } else {
+            }else if (elem==0) {
+
+                return this;
+
+        } else {
                 return tail();
             }
 
@@ -216,6 +238,31 @@ public sealed interface Lista<T> permits Cons, Nil {
     }
 
 
+    static int minAux(Lista<Integer> lista, Integer m) {
+
+        if (lista.isEmpty()) {
+            return m;
+        } else {
+
+            if (m <= lista.head()) {
+
+
+                return minAux(lista.tail(), m);
+            } else {
+                m = lista.head();
+                return minAux(lista.tail(), m);
+
+            }
+        }
+
+    }
+
+    static int min(Lista<Integer> lista) {
+
+        return minAux(lista, lista.head());
+    }
+
+
     static<T> Function<Function<T, T>, Function<Function<T, T>,Function<T, T>>> compPoli (){
 
         return f->g->x-> g.apply(f.apply(x));
@@ -255,6 +302,23 @@ public sealed interface Lista<T> permits Cons, Nil {
                 return g.apply(f.apply(x));
             }
         };
+    }
+
+
+    default Integer size(){
+        if (isEmpty()){
+
+            return 0;
+
+        }else {
+
+            return 1+ tail().size();
+        }
+
+
+    }
+    public static <U> Lista<U> concatenar(Lista<U> lista1, Lista<U> lista2) {
+        return lista1.isEmpty() ? lista2 : Lista.of(lista1.head(), concatenar(lista1.tail(), lista2));
     }
 
 
