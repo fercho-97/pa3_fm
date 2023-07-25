@@ -321,7 +321,116 @@ public sealed interface Lista<T> permits Cons, Nil {
         return lista1.isEmpty() ? lista2 : Lista.of(lista1.head(), concatenar(lista1.tail(), lista2));
     }
 
+    default <U> Lista<U> map(Function<T, U> fn) {
 
+        if (this.isEmpty()) {
+
+            return Lista.NIL;
+        } else {
+            var tmp = tail().map(fn);
+            var newCab = fn.apply(this.head());
+// return Lista.of(newCab, tmp);
+
+            return tmp.preppend(newCab);
+        }
+    }
+
+    default <U> Lista<U> mapIt(Function<T, U> fn) {
+
+        var tmp = this;
+
+        Lista<U> retTmp = Lista.NIL;
+
+        while (!tmp.isEmpty()) {
+
+            T elem = tmp.head();
+            U newElem = fn.apply(elem);
+
+            retTmp = Lista.of(newElem, retTmp);
+
+            tmp = tmp.tail();
+
+
+        }
+        return retTmp;
+    }
+
+    default Lista<T> inv() {
+
+        var tmp = this;
+
+        Lista<T> retTmp = Lista.NIL;
+
+        while (!tmp.isEmpty()) {
+
+
+            retTmp = Lista.of(tmp.head(), retTmp);
+
+            tmp = tmp.tail();
+
+
+        }
+        return retTmp;
+    }
+
+    static <T> T reduce(List<T> ls, Function<T, Function<T, T>> fn) {
+
+        T acum = ls.get(0);
+        for (int i = 1; i < ls.size(); i++) {
+
+            T elem = ls.get(i);
+            acum = fn.apply(acum).apply(elem);
+
+        }
+        return acum;
+    }
+
+    default T reduce2(T identity, Function<T, Function<T, T>> fn) {
+
+        T acum = identity;
+
+        var tmp = this;
+
+        while (!tmp.isEmpty()) {
+            acum = fn.apply(tmp.head()).apply(acum);
+
+            tmp = tmp.tail();
+        }
+
+        return acum;
+    }
+
+    default <U> U foldLeft(U identity, Function<U, Function<T, U>> fn) {
+
+        U acum = identity;
+
+        var tmp = this;
+
+        while (!tmp.isEmpty()) {
+            acum = fn.apply(acum).apply(tmp.head());
+
+            tmp = tmp.tail();
+        }
+
+        return acum;
+    }
+
+    default <U> U foldRight(U identity, Function<T, Function<U, U>> fn) {
+
+        if (this.isEmpty()) {
+            return identity;
+
+        } else {
+
+            T elem = this.head();
+            U tmp = this.tail().foldRight(identity, fn);
+
+            return fn.apply(elem).apply(tmp);
+
+        }
+
+
+    }
 
 
 }
