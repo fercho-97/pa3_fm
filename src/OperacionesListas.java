@@ -205,7 +205,7 @@ public class OperacionesListas {
             return l1;
         };
 
-        Lista<Integer> ls2 = Lista.NIL;
+
         var inv = ls1.foldLeft(Lista.NIL, list-> x->list.preppend(x));
         var inv2 = ls1.foldLeft(Lista.NIL, fn3);
 
@@ -221,6 +221,13 @@ public class OperacionesListas {
         System.out.println("El foldright de la lista (invertir)= " + size);
 
         System.out.println(System.getProperty("java.version"));
+
+        var map = ls1.inv().foldLeft(Lista.NIL, list->x->list.preppend(x.doubleValue()));
+        var map2 = ls1.foldRight(Lista.NIL, x->list->list.preppend(x.doubleValue()));
+
+        System.out.println("lista original= " + ls1);
+        System.out.println("El foldleft de la lista (map)= " + map);
+        System.out.println("El foldRight de la lista (map)= " + map2);
 
 
     }
