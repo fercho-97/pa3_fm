@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static lista.Lista.NIL;
 import static lista.Lista.reduce;
@@ -71,7 +72,6 @@ public class OperacionesListas {
 
     static <T, U> U foldRight(List<T> ls, U identity, Function<T, Function<U, U>> fn) {
         U acum = identity;
-
         for (int i = ls.size() - 1; i >= 0; i--) {
 
             acum = fn.apply(ls.get(i)).apply(acum);
@@ -79,6 +79,40 @@ public class OperacionesListas {
 
         return acum;
     }
+
+    static Lista<Integer> r(int inicio, int fin) {
+
+        if (inicio < fin) {
+            System.out.println(inicio);
+            return Lista.of(inicio, r(inicio + 1, fin));
+        } else {
+            return Lista.NIL;
+        }
+
+    }
+
+    static <T> Lista<T> unfold(T inicio, Function<T, T> fn, Predicate<T> con) {
+        if (con.test(inicio)) {
+            return Lista.of(inicio, unfold(fn.apply(inicio), fn, con));
+        }
+        return Lista.NIL;
+    }
+
+    static <T> List<T> unfoldIm(T inicio, Function<T, T> fn, Predicate<T> con) {
+
+        List<T> ret = new ArrayList<>();
+
+        while(con.test(inicio)){
+
+           ret.add(inicio);
+
+           inicio= fn.apply(inicio);
+
+        }
+
+        return ret;
+    }
+
 
     public static void testReduction() {
 
@@ -198,15 +232,15 @@ public class OperacionesListas {
 
         System.out.println("El foldright de la lista= " + str3);
 
-        Function<Lista<Integer>,Function<Integer,Lista<Integer>>> fn3= list->x->{
+        Function<Lista<Integer>, Function<Integer, Lista<Integer>>> fn3 = list -> x -> {
 
-            var l1 =  list.preppend(x);
+            var l1 = list.preppend(x);
 
             return l1;
         };
 
 
-        var inv = ls1.foldLeft(Lista.NIL, list-> x->list.preppend(x));
+        var inv = ls1.foldLeft(Lista.NIL, list -> x -> list.preppend(x));
         var inv2 = ls1.foldLeft(Lista.NIL, fn3);
 
         System.out.println("El foldright de la lista (invertir)= " + inv);
@@ -215,20 +249,32 @@ public class OperacionesListas {
         // Function<Integer, Function<Lista<Integer>,Integer>> fnSize= x->list->x+1;
 
 
-        var size = ls1.foldLeft(0, x->list->x+1);
+        var size = ls1.foldLeft(0, x -> list -> x + 1);
 
 
         System.out.println("El foldright de la lista (invertir)= " + size);
 
         System.out.println(System.getProperty("java.version"));
 
-        var map = ls1.inv().foldLeft(Lista.NIL, list->x->list.preppend(x.doubleValue()));
-        var map2 = ls1.foldRight(Lista.NIL, x->list->list.preppend(x.doubleValue()));
+        var map = ls1.inv().foldLeft(Lista.NIL, list -> x -> list.preppend(x.doubleValue()));
+        var map2 = ls1.foldRight(Lista.NIL, x -> list -> list.preppend(x.doubleValue()));
 
         System.out.println("lista original= " + ls1);
         System.out.println("El foldleft de la lista (map)= " + map);
         System.out.println("El foldRight de la lista (map)= " + map2);
 
+        var r = OperacionesListas.r(0, 5);
+
+        System.out.println(r);
+
+
+        var unf = OperacionesListas.unfold(0, x -> x + 1, x -> x < 100);
+
+        System.out.println(unf);
+
+        var unfIm = OperacionesListas.unfoldIm(0, x -> x + 1, x -> x < 5);
+
+        System.out.println(unfIm);
 
     }
 
