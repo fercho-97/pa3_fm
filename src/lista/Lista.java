@@ -1,8 +1,11 @@
 package lista;
 
+import recursion.TailCall;
+
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public sealed interface Lista<T> permits Cons, Nil {
     Lista NIL = new Nil();
@@ -30,6 +33,10 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     static <T> Lista<T> of(T h, Lista<T> t, Lista<T> t2) {
         return concatenar(new Cons<>(h, t), t2);
+    }
+
+    static <T> TailCall<Lista<T>> ofTH(T h, Lista<T> t) {
+        return TailCall.ret(new Cons<>(h, t));
     }
 
     static <T> Lista<T> of(T... elems) {
@@ -69,6 +76,34 @@ public sealed interface Lista<T> permits Cons, Nil {
         }
 
     }
+
+    default TailCall<Lista<T>> appendTRHAux(Lista<T> acc, T elem) {
+        if (acc.isEmpty()) {
+            return TailCall.ret(Lista.of(elem, acc));
+        } else {
+            return TailCall.ret(Lista.of(acc.head(), acc.tail().appendTRHAux(acc.tail(), elem).eval()));
+        }
+    }
+    default Lista<T> appendTRH(T elem) {
+        return appendTRHAux(this, elem).eval();
+    }
+
+
+
+    static <T>  TailCall<Lista<T>> appendTH(Lista<T> original ,Lista<T> acum, T val) {
+
+        if (original == NIL) {
+            return TailCall.ret(acum.preppend(val));
+        } else {
+
+            Supplier<TailCall<Lista<T>>> ret = () -> appendTH(original.tail(), acum.preppend(original.head()), val);
+            return TailCall.sus(ret);
+
+        }
+
+    }
+
+
 
     default Lista<T> preppend(T val) {
 
@@ -118,7 +153,7 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     }
 
-    default Lista<T> invertir(){
+    default Lista<T> invertir() {
 
         if (this.isEmpty()) {
 
@@ -130,21 +165,48 @@ public sealed interface Lista<T> permits Cons, Nil {
 
     }
 
+//    static<T> TailCall<Lista<T>> invertirTH(Lista<T> list, Lista<T> acum) {
+//        if (list.isEmpty()) {
+//            return TailCall.ret(acum);
+//        } else {
+//            Supplier<TailCall<Lista<T>>> ret = () -> invertirTH(list.tail(), acum.preppend(list.head()));
+//            return TailCall.sus(ret);
+//        }
+//    }
+
+
     default Lista<T> drop(Integer elem) {
 
-            if (!(elem == 0)) {
-                return tail().drop(elem - 1);
-            }else if (elem==0) {
+        if (!(elem == 0)) {
+            return tail().drop(elem - 1);
+        } else if (elem == 0) {
 
-                return this;
+            return this;
 
         } else {
-                return tail();
-            }
+            return tail();
+        }
+    }
 
+
+    static<T> TailCall<Lista<T>> dropTHAux(Lista<T> list, Integer elem) {
+        if (!(elem == 0)) {
+
+            Supplier<TailCall<Lista<T>>> ret = () -> dropTHAux(list.tail(),elem - 1);
+            return TailCall.sus(ret);
+
+        }else if (elem == 0) {
+
+            return TailCall.ret(list);
+        } else {
+            return TailCall.ret(list.tail());
+        }
 
     }
 
+    default Lista<T> dropTH(Integer elem){
+        return dropTHAux(this,  elem).eval();
+    }
 
 
 
@@ -165,9 +227,33 @@ public sealed interface Lista<T> permits Cons, Nil {
         return isEmpty() ? NIL
                 : p.test(head()) ? tail().dropWhile(p)
                 : Lista.of(head(), tail().dropWhile(p));
-
-
     }
+
+    static<T> TailCall<Lista<T>> dropWhileTHAux(Lista<T> list,Predicate<T> p) {
+
+        if (list.isEmpty()) {
+            return TailCall.ret(NIL);
+        } else {
+
+            if (p.test(list.head())){
+
+                Supplier<TailCall<Lista<T>>> ret = ()-> dropWhileTHAux(list.tail(), p);
+                return  TailCall.sus(ret);
+                //return tail().dropWhile(p);
+            }else{
+                Supplier<TailCall<Lista<T>>> ret1 = ()-> Lista.ofTH(list.head(), dropWhileTHAux(list.tail(),p).eval());
+
+                return  TailCall.sus(ret1);
+
+            }
+        }
+    }
+
+    default Lista<T> dropWhileTH(Predicate<T> p) {
+
+        return dropWhileTHAux(this, p).eval();
+    }
+
 
     default Lista<T> take(Integer elem) {
         if (this.isEmpty()) {
@@ -182,17 +268,40 @@ public sealed interface Lista<T> permits Cons, Nil {
         }
     }
 
-    default Lista<T> takeWhile(Predicate<T> p) {
+    static<T> TailCall<Lista<T>> takeTHAux(Lista<T> list, Lista<T> acum,Integer elem) {
 
-        if (isEmpty()){
+        if (list.isEmpty()) {
 
-            return  NIL;
-        }else {
+            return TailCall.ret(NIL);
+        } else {
+            if (elem == 0) {
+                return TailCall.ret(Lista.of());
+            } else {
+                Supplier<TailCall<Lista<T>>> ret = ()-> takeTHAux(list.tail(), acum.preppend(list.head()), elem-1);
+                return  TailCall.sus(ret);
 
-            if (p.test(head())){
+            }
+        }
+
+    }
+    default Lista<T> takeTH(Integer elem, Lista<T> acum) {
+
+        return  takeTHAux(this, acum,elem).eval();
+    }
+
+
+
+        default Lista<T> takeWhile(Predicate<T> p) {
+
+        if (isEmpty()) {
+
+            return NIL;
+        } else {
+
+            if (p.test(head())) {
 
                 return Lista.of(head(), tail().takeWhile(p));
-            }else {
+            } else {
 
                 return tail().takeWhile(p);
             }
@@ -213,10 +322,12 @@ public sealed interface Lista<T> permits Cons, Nil {
 
 
     }
+
     static int max(Lista<Integer> lista) {
 
         return maxAux(lista, lista.head());
     }
+
     static int maxAux(Lista<Integer> lista, Integer m) {
 
         if (lista.isEmpty()) {
@@ -263,24 +374,22 @@ public sealed interface Lista<T> permits Cons, Nil {
     }
 
 
-    static<T> Function<Function<T, T>, Function<Function<T, T>,Function<T, T>>> compPoli (){
+    static <T> Function<Function<T, T>, Function<Function<T, T>, Function<T, T>>> compPoli() {
 
-        return f->g->x-> g.apply(f.apply(x));
-
-    }
-
-
-
-    static<T,U,V> Function<Function<T, U>, Function<Function<U, V>,Function<T, V>>> compPoli2 (){
-
-        return f->g->x-> g.apply(f.apply(x));
-
+        return f -> g -> x -> g.apply(f.apply(x));
 
     }
 
 
+    static <T, U, V> Function<Function<T, U>, Function<Function<U, V>, Function<T, V>>> compPoli2() {
 
-    static<T> Function<T, T> comp(Function<T, T> f, Function<T, T> g) {
+        return f -> g -> x -> g.apply(f.apply(x));
+
+
+    }
+
+
+    static <T> Function<T, T> comp(Function<T, T> f, Function<T, T> g) {
 
         return new Function<T, T>() {
             @Override
@@ -292,8 +401,7 @@ public sealed interface Lista<T> permits Cons, Nil {
     }
 
 
-
-    static<T,U,V> Function<T, V> compPolFun(Function<T, U> f, Function<U, V> g) {
+    static <T, U, V> Function<T, V> compPolFun(Function<T, U> f, Function<U, V> g) {
 
         return new Function<T, V>() {
             @Override
@@ -305,18 +413,19 @@ public sealed interface Lista<T> permits Cons, Nil {
     }
 
 
-    default Integer size(){
-        if (isEmpty()){
+    default Integer size() {
+        if (isEmpty()) {
 
             return 0;
 
-        }else {
+        } else {
 
-            return 1+ tail().size();
+            return 1 + tail().size();
         }
 
 
     }
+
     public static <U> Lista<U> concatenar(Lista<U> lista1, Lista<U> lista2) {
         return lista1.isEmpty() ? lista2 : Lista.of(lista1.head(), concatenar(lista1.tail(), lista2));
     }
